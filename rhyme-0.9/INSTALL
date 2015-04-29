@@ -1,0 +1,112 @@
+                     Rhyming Dictionary Installation
+                     *******************************
+
+The Rhyming Dictionary is a C program that uses GDBM to find the
+rhymes of any english word you give it.  In order to install it,
+you'll need to have GDBM (the GNU Database Manager) installed on your
+system.  If you don't have GDBM, you can get it from:
+
+http://www.gnu.org/software/gdbm/gdbm.html
+
+You will also need GNU Readline, available at:
+
+http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html
+
+Please note that MySQL is *no longer required!*  In fact, MySQL is no
+longer used whatsoever.  At the end of this file are instructions on
+how to clean out the old rhyme data from your MySQL databases if
+you're upgrading from a previous version.
+
+
+
+* Step 1: Edit the Makefile
+
+Change BINPATH to where you'd like the "rhyme" binary installed
+(the default is /usr/bin) and change the RHYMEPATH to where you'd like
+the Rhyming Dictionary database files installed (the default is
+/usr/share/rhyme).  These database files will be about 10 megabytes,
+so make sure you have enough room.  Also included is a man page, so
+feel free to adjust the MANPATH to where you would like it installed
+(the default is /usr/share/man/man1).
+
+
+* Step 2: Build it
+
+Type "make".  You'll notice that a "compile" binary is created first.
+This program generates GDBM files from the included text files and
+will take quite awhile to complete.  Why?  Because GDBM files aren't
+actually cross-platform.  For example, Sun Sparc GDBM files don't work
+on Linux x86 and vice-versa.  The compile step ensures that the
+created GDBM files *will* work on your machine.  The actual building
+of the "rhyme" binary should be quite simple.
+
+
+* Step 3: Install it
+
+As an administrator, type "make install".  This will place the "rhyme"
+binary in the BINPATH directory and the "words.db","rhymes.db" and
+"multiple.db" files in the RHYMEPATH directory.  If you'd like to move
+these files at any time, you can use the RHYMEPATH environment
+variable to point "rhyme" to the new location.
+
+
+And you should be all set!  As long as the BINPATH is in your path
+(most likely), you should be able to type "rhyme" and get the words
+you're looking for.  The performance of GDBM is similar to that of
+the old MySQL version but with only half the steps to install.
+
+
+If you find you don't like or need the dictionary any longer,
+"make uninstall" will remove its files from your system so long as
+they haven't moved since installation.  By design, the install
+doesn't spray files all over your system.  So cleanup or upgrading
+should pose no problems.
+
+
+If you have any problems, email me at:
+
+bri@biosci.umn.edu
+
+and I'll do what I can to assist you in getting the Rhyming Dictionary
+installed and working.  Check out http://rhyme.sourceforge.net
+occasionally for updates and additional info.  Thank you!
+
+                                                -Brian (tuffy) Langenberger
+
+
+* Uninstalling old MySQL data
+
+As promised, if you're upgrading from an older version you most likely
+have unneeded rhyme data sitting in MySQL.  To remove it, first
+connect to MySQL as an administrator.  Try:
+
+mysql -u root -p
+
+at a UNIX prompt and give it the proper MySQL root password.  If
+successful, you should see something like:
+
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 51 to server version: 3.22.32
+
+Type 'help' for help.
+
+mysql>
+
+
+which indicates you are now connected.  At the mysql> prompt, you can
+now type:
+
+drop database rhymedict;
+
+and the data should be removed.  But there's probably still a guest
+user present on MySQL which should also be removed.  Do this by
+typing:
+
+delete from mysql.user where User="rhymeguest" and Host="localhost";
+
+and the guest user should be removed.  That's it!  Just type "quit;"
+to exit MySQL and don't look back.  Future versions of the Rhyming
+Dictionary will no longer use MySQL to store rhyming data.  If you
+have no other use for MySQL, feel free to remove it from your system
+entirely.

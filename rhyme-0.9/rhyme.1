@@ -1,0 +1,39 @@
+.TH RHYME "1" "December 2001" "rhyme 8.0"
+.SH NAME
+rhyme \- display list of rhymes
+.SH SYNOPSIS
+.B rhyme
+[\fIOPTION\fR]... [\fIWORD\fR]
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+Display all the perfect rhymes for a given word.
+Results are sorted by syllable count and alphabetically.
+.TP
+\fB\-s\fR, \fB\-\-syllable\fR
+display the word's syllable count instead of rhymes
+.TP
+\fB\-m\fR, \fB\-\-merged\fR
+displays rhymes for words with multiple pronunciations as a single list 
+rather than as individual lists
+.TP
+\fB\-i\fR, \fB\-\-interactive\fR
+runs in interactive mode, allowing numerous words to be entered in a
+session
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+displays a help message
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+displays the version
+.SH AUTHOR
+Written by Brian Langenberger.
+.SH "REPORTING BUGS"
+Report bugs to <bri@cbs.umn.edu>.
+.SH COPYRIGHT
+Copyright \(co 2000, 2001 Brian Langenberger
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+gdbm(3) and readline(3)
