@@ -98,33 +98,40 @@ void printRhymeRow(struct RhymeWordList *list, int screenwidth) {
 
   current = list;
 
-  fprintf(stdout, "%d%s", current->word->syllables, STARTROWSTRING);
+  /* fprintf(stdout, "%d%s", current->word->syllables, STARTROWSTRING); */
   sent += (countdigits(current->word->syllables), startrowwidth);
 
   while (current != NULL) {
     next = current->next;
     wordwidth = current->word->length;
-    if ((sent + wordwidth + padwidth) <= screenwidth) {
-      if (!firstword) {
-	fprintf(stdout, "%s", PADSTRING); 
-	printWord(current->word, stdout);
-	sent += (wordwidth + padwidth);
-      } else {
-	firstword = 0;
-	printWord(current->word, stdout);
-	sent += (wordwidth + indentrowwidth);
-      }
-    } else {
-      firstword = 0;
-      fprintf(stdout, "\n%s", INDENTROWSTRING);
-      printWord(current->word, stdout);
-      sent = (indentrowwidth + wordwidth);
-    }
-    /*printf("%s - %d\n", current->word, current->syllables);*/
+
+    printWord(current->word, stdout);
+    fprintf(stdout, "%s", PADSTRING);
+    sent += (wordwidth + padwidth);
+
+    /* if ((sent + wordwidth + padwidth) <= screenwidth) { */
+    /*   if (!firstword) { */
+    /*     fprintf(stdout, "%s", PADSTRING);  */
+    /*     printWord(current->word, stdout); */
+    /*     sent += (wordwidth + padwidth); */
+    /*   } else { */
+    /*     firstword = 0; */
+    /*     printWord(current->word, stdout); */
+    /*     sent += (wordwidth + indentrowwidth); */
+    /*   } */
+    /* } else { */
+    /*   firstword = 0; */
+    /*   fprintf(stdout, "\n%s", INDENTROWSTRING); */
+    /*   printWord(current->word, stdout); */
+    /*   sent = (indentrowwidth + wordwidth); */
+    /* } */
+
+    /* printf("%s - %d\n", current->word, current->syllables); */
+
     current = next;
   }
 
-  fprintf(stdout, "\n\n");
+  /* fprintf(stdout, "\n\n"); */
 }
 
 void freeRhymeTree(struct RhymeWordRow *tree) {
@@ -162,9 +169,9 @@ void prettyPrintRhymes(struct RhymeWordList *head) {
 }
 
 void printFindingWord(struct RhymeWord *word) {
-  printf("Finding perfect rhymes for ");
-  printWord(word, stdout);
-  printf("...\n");
+  /* printf("Finding perfect rhymes for "); */
+  /* printWord(word, stdout); */
+  /* printf("...\n"); */
 }
 
 void printNotFound(datum d) {

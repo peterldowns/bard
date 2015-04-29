@@ -10,7 +10,7 @@
 /*These are for pretty-printing output*/
 #define STARTROWSTRING ": "
 #define INDENTROWSTRING "   "
-#define PADSTRING ", "
+#define PADSTRING " "
 
 int screenWidth();
 
