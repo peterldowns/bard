@@ -43,8 +43,8 @@
 
 (define (rhymes-with other)
   (lambda (word)
-    (let ((rhymes (get-rhymes word)))
-      (let ((member? (member other rhymes)))
+    (let ((rhymes (get-rhymes (word-spelling word))))
+      (let ((member? (member (word-spelling other) rhymes)))
 	(if member?
 	    #t
 	    #f)))))
