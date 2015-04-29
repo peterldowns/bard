@@ -1,3 +1,6 @@
+; Constraints
+(load "constraints.scm")
+
 ; Functions for expressing the poem as a nested list of constraints.
 (define (tagged-list tag)
   (lambda elements (cons tag elements)))
@@ -41,40 +44,33 @@
       (cdr cell))
     (error "Not a cell:" cell)))
 
+
+
+
 (define (make-interpreter vocabulary grader)
-  (define lines '())
-  (define words '())
+  (define lines-table (make-strong-eq-hash-table))
+  (define words-table (make-strong-eq-hash-table))
   (define (interpreter cell)
     (cond ((or (poem? cell) (line? cell))
            (map interpreter (contents cell)))
-          ((word? cell) 
-           ;; Something like:
-           ;(grader (fetch-words vocabulary (constraints-of cell))))
-           #f)
+          ((word? cell)
+           (let* ((name (name-of cell))
+                  (existing-value (hash-table/get words-table name #f))
+                  (constraints (constraints-of cell)))
+             (or existing-value
+                 (let ((value (grader (fetch-words vocabulary constraints))))
+                   (hash-table/put! words-table name value)
+                   value))))
           ((string? cell)
            ; String literals are left as is.
            cell)
           ((symbol? cell)
-           ; Not sure what symbols should mean yet.
+           ; Not sure what symbols should mean yet. Should probably
+           ; support name lookup, but not going to do that yet.
            (cons 'symbol cell))
           (else
             (list 'unrecognized cell))))
   interpreter)
-
-
-; Constraint functions, which based on some interpreter state will either
-; accept or reject a possibility.
-(define (rhymes-with symbol)
-  (lambda (state possibility)
-    (pp "rhymes-with possibility:")
-    (pp possiblity)
-    #t))
-
-(define (has-tags . tags)
-  (lambda (state possibility)
-    (pp "has-tags possibility:")
-    (pp possiblity)
-    #t))
 
 
 ; Helper for printing poems
@@ -94,10 +90,10 @@
 
 ; Example
 (define test-interpreter (make-interpreter 'vocabulary 'grader))
-(define test-word (word 'a (has-tags 'noun) (rhymes-with 'b)))
+(define test-word (word 'a (number-syllables 2) (rhymes-with "cow")))
 (define test-line (line 'b "more-literals" test-word (word (rhymes-with 'a))))
 (define test-constraints (poem
-                           (line 'a (word 'a (has-tags 'noun))
+                           (line 'a (word 'a (has-antonym 'foo))
                                  "literal"
                                  (word (rhymes-with 'a)))
                            test-line

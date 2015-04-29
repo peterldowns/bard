@@ -1,3 +1,4 @@
+(load "word.scm")
 (define (number-syllables n)
   (lambda (word)
     (= (word-syllables word) n)))
@@ -48,3 +49,4 @@
 	(if member?
 	    #t
 	    #f)))))
+
