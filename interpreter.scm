@@ -1,5 +1,6 @@
 ; Constraints
 (load "constraints.scm")
+(load "word.scm")
 
 ; Functions for expressing the poem as a nested list of constraints.
 (define (tagged-list tag)
@@ -44,33 +45,53 @@
       (cdr cell))
     (error "Not a cell:" cell)))
 
-
-
-
 (define (make-interpreter vocabulary grader)
   (define lines-table (make-strong-eq-hash-table))
   (define words-table (make-strong-eq-hash-table))
   (define (interpreter cell)
-    (cond ((or (poem? cell) (line? cell))
+    (cond ((poem? cell)
            (map interpreter (contents cell)))
+          ((line? cell)
+           (let* ((name (name-of cell))
+                  (existing-value (and name
+                                       (hash-table/get lines-table name #f)))
+                  (contents (contents cell)))
+             (or existing-value
+                 (let ((value (map interpreter contents)))
+                   (hash-table/put! lines-table name value)
+                   value))))
           ((word? cell)
            (let* ((name (name-of cell))
-                  (existing-value (hash-table/get words-table name #f))
+                  (existing-value (and name
+                                       (hash-table/get words-table name #f)))
                   (constraints (constraints-of cell)))
              (or existing-value
                  (let ((value (grader (fetch-words vocabulary constraints))))
                    (hash-table/put! words-table name value)
                    value))))
+          ; Strings and symbols are both literals.
           ((string? cell)
-           ; String literals are left as is.
-           cell)
+           (symbol cell))
           ((symbol? cell)
-           ; Not sure what symbols should mean yet. Should probably
-           ; support name lookup, but not going to do that yet.
-           (cons 'symbol cell))
+           cell)
           (else
             (list 'unrecognized cell))))
   interpreter)
+
+(define (join constraints)
+  (lambda test-args
+    (every (lambda (constraint) (apply constraint test-args)) constraints)))
+(define (fetch-words vocabulary constraints)
+  (let ((results '()))
+    (define (filter-fn _ w)
+      (if ((join constraints) vocabulary w)
+        (set! results (cons w results))))
+    (hash-table/for-each vocabulary filter-fn)
+    results))
+(define (test-grader possibilities)
+  (if (null? possibilities)
+    #f
+    (car possibilities)))
 
 
 ; Helper for printing poems
@@ -82,24 +103,23 @@
     (for-each (lambda (item)
                 (if (list? item)
                   (loop item (+ depth 1))
-                  (begin (display item)
+                  (begin (display
+                           (if (word-record? item) (word-str item) item))
                          (display " "))))
               poem)
     (newline)))
 
 
 ; Example
-(define test-interpreter (make-interpreter 'vocabulary 'grader))
+(define test-vocabulary (load-words "vocabulary/wordsScraped.txt"))
+(define test-vocabulary (load-words "dict.txt"))
+(define test-interpreter (make-interpreter test-vocabulary test-grader))
 (define test-word (word 'a (number-syllables 2) (rhymes-with "cow")))
-(define test-line (line 'b "more-literals" test-word (word (rhymes-with 'a))))
+(define test-line (line 'b "more-literals" test-word (word (rhymes-with "blue"))))
 (define test-constraints (poem
                            (line 'a (word 'a (has-antonym 'foo))
                                  "literal"
-                                 (word (rhymes-with 'a)))
-                           test-line
-                           (line (word (has-tags 'adverb))
-                                 "we"
-                                 (word (has-tags 'verb 'past-tense)))))
+                                 (word (rhymes-with "cow")))))
 (define test-poem (test-interpreter test-constraints))
 
 (newline)(newline)

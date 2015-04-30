@@ -5,12 +5,14 @@
     num-syllables
     synonyms
     antonyms)
-	word?
+	word-record?
   (sym word-sym)
   (type word-type)
   (num-syllables word-num-syllables)
   (synonyms word-synonyms)
   (antonyms word-antonyms))
+(define (word-str w)
+  (string (word-sym w)))
 
 (define (load-file-contents file-name)
   (define (read-file file contents)
@@ -29,7 +31,7 @@
                 (if (= 5 (length line))
                   (let ((word (apply make-word line)))
                     (hash-table/put! table (word-sym word) word))
-                  ; @Dang: some definitions are broken. Please fix?
+                  ; @Dang: some definitions are broken. Please fix!
                   (begin
                     (display "Ignoring definition: ")
                     (display line)
@@ -37,3 +39,6 @@
                     'ignore-broken-content)))
               file-contents)
     table))
+
+(define word-dne (make-word 'word-dne 'dne 0 '() '()))
+

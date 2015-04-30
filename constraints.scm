@@ -1,16 +1,17 @@
 (load "word.scm")
+
 (define (number-syllables n)
-  (lambda (word)
+  (lambda (vocabulary word)
     (= (word-syllables word) n)))
 
 (define (has-synonym synonym)
-  (lambda (word)
+  (lambda (vocabulary word)
     (if (memq synonym (word-synonyms word))
 	#t
 	#f)))
 
 (define (has-antonym antonym)
-  (lambda (word)
+  (lambda (vocabulary word)
     (if (memq antonym (word-antonyms word))
 	#t
 	#f)))
@@ -36,17 +37,24 @@
   (let ((port (open-output-string)))
     (begin
       (run-synchronous-subprocess "rhyme"
-				  (list word)
+				  (list (word-str word))
 				  'output
 				  port)
-      (filter (lambda (other) (not (string=? other word)))
+      (filter (lambda (other) (not (string=? other (word-str word))))
 	      (split-output (get-output-string port))))))
 
 (define (rhymes-with other)
-  (lambda (word)
-    (let ((rhymes (get-rhymes (word-spelling word))))
-      (let ((member? (member (word-spelling other) rhymes)))
-	(if member?
-	    #t
-	    #f)))))
-
+  (lambda (vocabulary test)
+    (define (get-word word-thing)
+      (cond ((word-record? word-thing) word-thing)
+            (else
+              (hash-table/get
+                vocabulary
+                (if (symbol? word-thing)
+                    word-thing
+                    (symbol word-thing))
+                word-dne))))
+    (let* ((a (get-word other))
+           (b (get-word test))
+           (rhymes (get-rhymes a)))
+      (member (word-str b) rhymes))))
