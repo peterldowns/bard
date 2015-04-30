@@ -1,3 +1,4 @@
+; Words are records of the following type:
 (define-record-type word
 	(make-word
     sym
