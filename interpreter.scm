@@ -60,10 +60,12 @@
     results))
 
 ; Example
-;(define test-vocabulary (load-words "vocabulary/wordsScraped.txt"))
-(define test-vocabulary (load-words "vocabulary/scrape.scm"))
+(define load-result (load-words "vocabulary/scrape.scm"))
+(define test-vocabulary (car load-result))
+(define test-pos-table (cdr load-result))
 (define test-interpreter (make-interpreter test-vocabulary random-choice))
-(define test-word (match-word 'a (number-syllables 2) (rhymes-with "clicker")))
+(define test-word (match-word 'a (number-syllables 2)
+                                 (rhymes-with "clicker")))
 (define test-line (match-line 'b "more-literals"
                                  test-word
                                  (match-word (rhymes-with "corruption"))))
@@ -74,7 +76,6 @@
                                        (match-word 'x (has-synonym "indolent")))
                            (match-line test-word)
                            (match-line 'a)
-                           (match-line (match-word 'x))
-                           test-line
-                           ))
+                           (match-line (match-word 'x) (match-word 'a))
+                           test-line))
 (define test-poem (test-interpreter test-constraints))
