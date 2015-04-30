@@ -7,12 +7,17 @@ import requests
 
 baseURL = "http://dictionary.reference.com/browse/"
 
+
 def clean_pos(pos_str):
   return re.sub(r'\s*\(.*\)\s*', '', pos_str).split(' ')
 
+
 def clean(inputStr):
   temp = re.sub("[\d.]|;", "", inputStr).strip()
-  return [y for y in [x.strip() for x in temp.replace("See", "").split(",")] if " " not in y]
+  return [y for y in [x.strip() for x in
+                      temp.replace("See", "").split(",")]
+          if " " not in y]
+
 
 def scrape(word):
   try:
@@ -28,24 +33,25 @@ def scrape(word):
     else:
       return None
     if soup.select('.tail-type-synonyms .tail-elements'):
-      synonyms = clean(soup.select('.tail-type-synonyms .tail-elements')[0].text.encode("utf-8"))
+      synonyms = clean(
+          soup.select(
+            '.tail-type-synonyms .tail-elements')[0].text.encode("utf-8"))
     if soup.select('.tail-type-antonyms .tail-elements'):
-      antonyms = clean(soup.select('.tail-type-antonyms .tail-elements')[0].text.encode("utf-8"))
+      antonyms = clean(
+          soup.select(
+            '.tail-type-antonyms .tail-elements')[0].text.encode("utf-8"))
     return [word, pos, len(syllables), synonyms, antonyms]
   except Exception as e:
     return None
 
-def write_data(json_data, str_data):
-  print 'Writing text data.'
-  with open('scrape.txt', 'w') as fout:
-    for data in str_data:
-      fout.write(str(data) + '\n')
 
+def write_data(json_data):
   print 'Writing JSON data.'
   with open('scrape.json', 'w') as fout:
     json.dump(json_data, fout, indent=2)
 
-if __name__ == '__main__':
+
+def main():
   wordlist = []
   with open('words.txt', 'r') as fin:
     wordlist = fin.readline().split()
@@ -56,7 +62,6 @@ if __name__ == '__main__':
 
   num_words = len(wordlist)
   json_data = {}
-  str_data = []
   for i, word in enumerate(wordlist):
     print 'Scraping {}/{} {}'.format(i + 1, num_words, word)
     scrape_data = scrape(word)
@@ -74,10 +79,15 @@ if __name__ == '__main__':
         'antonyms': antonyms,
         'rhymes': rhyming_words,
       }
-    str_data.append([word, pos, num_syllables, synonyms, antonyms, rhyming_words])
 
+    # Checkpoint our progress in case something bad happens (this scrape takes
+    # a while).
     if i % 1000 == 0:
-      write_data(json_data, str_data)
+      write_data(json_data)
 
-  write_data(json_data, str_data)
+  write_data(json_data)
   print 'Done.'
+
+
+if __name__ == '__main__':
+  main()

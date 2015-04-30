@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 import json
+import re
+
+bad_chars = re.compile(r'\(|\)|\'|\.|[0-9]')
+
 
 def encode_str(s):
-  def clean(word):
-    if '(' in word or ')' in word or '.' in word:
-      return ''
-    return ''.join(c.encode('ascii', 'replace') for c in word)
-  return clean(s)
+  """Clean and ascii-encode a string for uise with scheme."""
+  # Any unicode characters get replaced with their ascii equivalent if
+  # possible, or '?'.
+  ascii_s = s.encode('ascii', 'replace')
+  # There are some words that look like "foo(9)", which we ignore.
+  return bad_chars.sub('', ascii_s)
+
 
 def to_scm(word, data):
   return '({} ({}) {} ({}) ({}) ({}))'.format(
@@ -18,7 +24,9 @@ def to_scm(word, data):
       ' '.join(map(encode_str, data['antonyms'])),
       ' '.join(map(encode_str, data['rhymes'])))
 
-if __name__ == '__main__':
+
+def main():
+  """Write a scheme-loadable version of our scraped dictionary."""
   data = []
   with open('scrape.scm', 'w') as fout:
     with open('scrape.json', 'r') as fin:
@@ -28,3 +36,5 @@ if __name__ == '__main__':
   print 'Done.'
 
 
+if __name__ == '__main__':
+  main()
