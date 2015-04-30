@@ -1,8 +1,9 @@
 ; Constraints
-(load "constraints.scm")
 (load "word.scm")
-(load "pp.scm")
+(load "constraints.scm")
+(load "grader.scm")
 (load "matching.scm")
+(load "pp.scm")
 
 
 (define (make-interpreter vocabulary grader)
@@ -46,26 +47,20 @@
         (constraint-fn (join constraints)))
     (define (filter-fn k w)
       (if (constraint-fn vocabulary w)
-        (append! results (list w))))
+        (set! results (cons w results))))
     (hash-table/for-each vocabulary filter-fn)
     results))
-(define (test-grader possibilities)
-  (if (null? possibilities)
-    'no-match-found
-    (car possibilities)))
-
 
 ; Example
-;(define test-vocabulary (load-words "vocabulary/wordsScraped.txt"))
-(define test-vocabulary (load-words "dict.txt"))
-(define test-interpreter (make-interpreter test-vocabulary test-grader))
+(define test-vocabulary (load-words "vocabulary/wordsScraped.txt"))
+(define test-interpreter (make-interpreter test-vocabulary random-choice))
 (define test-word (match-word 'a (number-syllables 2) (rhymes-with "sag")))
 (define test-line (match-line 'b "more-literals" test-word (match-word (rhymes-with "blue"))))
 (define test-constraints (poem
-                           test-line
                            (match-line 'a
-                                       (match-word 'a (has-antonym 'foo))
+                                       (match-word 'a (has-antonym "cool"))
                                        "literal"
-                                       (match-word 'x (rhymes-with "cow"))
-                                       (match-word 'x))))
+                                       (match-word 'x (has-synonym "indolent"))
+                                       (match-word 'x))
+                           ))
 (define test-poem (test-interpreter test-constraints))
