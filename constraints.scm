@@ -6,31 +6,37 @@
 ; which return #t if the given word-record is considered to match the
 ; constraint or #f if it does not.
 
+; TODO(peter): pass in line and word lookup tables? Strings -> literal words,
+; symbols -> lookup in table.
+; TODO(peter): line constraints?
+(define (get-word vocabulary thing)
+  (cond ((word-record? thing) thing)
+        (else
+          (hash-table/get
+            vocabulary
+            (if (symbol? thing)
+                thing
+                (symbol thing))
+            word-dne))))
 
 (define (number-syllables n)
-  (lambda (vocabulary word)
-    (= (word-num-syllables word) n)))
+  (lambda (vocabulary thing)
+    (let ((word (get-word vocabulary thing)))
+      (= n (word-num-syllables word)))))
 
 
-(define (has-synonym synonym)
-  (lambda (vocabulary word)
-    (if (memq synonym (word-synonyms word))
-	#t
-	#f)))
+(define (has-synonym base-thing)
+  (lambda (vocabulary test-thing)
+    (let ((requirement (get-word vocabulary base-thing))
+          (test (get-word vocabulary test-thing)))
+      (memq (word-sym requirement) (word-synonyms test)))))
 
 
-(define (has-antonym antonym)
-  (lambda (vocabulary word)
-    (if (memq antonym (word-antonyms word))
-	#t
-	#f)))
-
-
-(define (format-word word)
-  (let ((index (string-find-next-char word #\()))
-    (if index
-	(substring word 0 index)
-	word)))
+(define (has-antonym base)
+  (lambda (vocabulary test)
+    (let ((word (get-word vocabulary base))
+          (antonym (get-word vocabulary test)))
+      (memq (word-sym antonym) (word-antonyms word)))))
 
 
 (define (rhymes-with other)
@@ -51,7 +57,6 @@
 (define (get-rhymes word)
   (let ((port (open-output-string)))
     (begin
-      (pp 'opening-port)
       (run-synchronous-subprocess "rhyme"
                                   (list (word-str word))
                                   'output
@@ -59,7 +64,6 @@
       (let ((result (filter (lambda (other)
                               (not (string=? other (word-str word))))
                             (split-output (get-output-string port)))))
-        (pp 'closing-port)
         (close-port port)
         result))))
 (define (split-output output)
@@ -72,3 +76,8 @@
 	    (split-iter (cons word result) rest))
 	  (reverse result))))
   (split-iter '() output))
+(define (format-word word)
+  (let ((index (string-find-next-char word #\()))
+    (if index
+	(substring word 0 index)
+	word)))
