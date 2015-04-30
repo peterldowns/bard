@@ -15,7 +15,7 @@ def fix_line(line):
 
 
 if __name__ == '__main__':
-  with open('wordsScrapped.txt', 'r') as fin:
-    with open('wordsScrapped.txt.clean', 'w') as fout:
+  with open('scrape.txt', 'r') as fin:
+    with open('scrape.txt.clean', 'w') as fout:
       fout.writelines(fix_line(line) for line in fin)
   print 'Done.'

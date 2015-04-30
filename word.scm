@@ -5,13 +5,15 @@
     type
     num-syllables
     synonyms
-    antonyms)
+    antonyms
+    rhymes)
 	word-record?
   (sym word-sym)
   (type word-type)
   (num-syllables word-num-syllables)
   (synonyms word-synonyms)
-  (antonyms word-antonyms))
+  (antonyms word-antonyms)
+  (rhymes word-rhymes))
 (define (word-str w)
   (string (word-sym w)))
 
@@ -29,7 +31,7 @@
   (let ((table (make-strong-eq-hash-table))
         (file-contents (load-file-contents file-name)))
     (for-each (lambda (line)
-                (if (= 5 (length line))
+                (if (= 6 (length line))
                   (let ((word (apply make-word line)))
                     (hash-table/put! table (word-sym word) word))
                   ; @Dang: some definitions are broken. Please fix!
@@ -41,5 +43,5 @@
               file-contents)
     table))
 
-(define word-dne (make-word 'word-dne 'dne 0 '() '()))
+(define word-dne (make-word 'word-dne 'dne 0 '() '() '()))
 

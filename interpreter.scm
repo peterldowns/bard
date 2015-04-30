@@ -5,6 +5,14 @@
 (load "matching.scm")
 (load "pp.scm")
 
+(define (amb succeed . things) (amb-of things))
+(define (amb-of succeed things)
+  (let loop ((alts things))
+    (if (null? alts)
+      (fail)
+      (succeed (lambda () (loop cdr alts))
+               (car alts)))))
+
 
 (define (make-interpreter vocabulary grader)
   (define lines-table (make-strong-eq-hash-table))
@@ -52,15 +60,21 @@
     results))
 
 ; Example
-(define test-vocabulary (load-words "vocabulary/wordsScraped.txt"))
+;(define test-vocabulary (load-words "vocabulary/wordsScraped.txt"))
+(define test-vocabulary (load-words "vocabulary/scrape.scm"))
 (define test-interpreter (make-interpreter test-vocabulary random-choice))
-(define test-word (match-word 'a (number-syllables 2) (rhymes-with "sag")))
-(define test-line (match-line 'b "more-literals" test-word (match-word (rhymes-with "blue"))))
+(define test-word (match-word 'a (number-syllables 2) (rhymes-with "clicker")))
+(define test-line (match-line 'b "more-literals"
+                                 test-word
+                                 (match-word (rhymes-with "corruption"))))
 (define test-constraints (poem
                            (match-line 'a
-                                       (match-word 'a (has-antonym "cool"))
+                                       (match-word 'a (has-antonym "hungry"))
                                        "literal"
-                                       (match-word 'x (has-synonym "indolent"))
-                                       (match-word 'x))
+                                       (match-word 'x (has-synonym "indolent")))
+                           (match-line test-word)
+                           (match-line 'a)
+                           (match-line (match-word 'x))
+                           test-line
                            ))
 (define test-poem (test-interpreter test-constraints))
