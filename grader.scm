@@ -1,3 +1,5 @@
+(define (universal-grader possibilities)
+  possibilities)
 (define (first-pick possibilities)
   (if (null? possibilities)
     #f
