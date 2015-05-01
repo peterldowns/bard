@@ -5,6 +5,10 @@
 (load "matching.scm")
 (load "pp.scm")
 
+(define (syllables-of line)
+  (pp 'checking-syllables)
+  (pp line)
+  8)
 
 (define (make-interpreter vocabulary grader)
   (define (interpreter poem)
@@ -29,25 +33,30 @@
                       words-alist)))))
   (define (parse-line line-constraint succeed fail lines-alist words-alist)
     (let* ((name (name-of line-constraint))
+           (syllables 8)
            (words (contents line-constraint))
            (existing-match (and name (assq name lines-alist)))
            (existing-value (and existing-match (cdr existing-match))))
       (if existing-value
         (succeed existing-value lines-alist words-alist)
         (parse-words-in-line words
-                             (lambda (value new-lines-alist new-words-alist)
-                               (succeed value
-                                        (if name
-                                          (cons (cons name value) new-lines-alist)
-                                          new-lines-alist)
-                                        new-words-alist))
+                             (lambda (value new-fail-fn new-lines-alist new-words-alist)
+                               (if (= syllables (syllables-of value))
+                                 (succeed value
+                                          (if name
+                                            (cons (cons name value) new-lines-alist)
+                                            new-lines-alist)
+                                          new-words-alist)
+                                 (begin
+                                   (pp "Syllables was not 8, failing")
+                                   (new-fail-fn))))
                              fail
                              lines-alist
                              words-alist))))
   (define (parse-words-in-line words succeed fail lines-alist words-alist)
     (define (impl result words succeed fail lines-alist words-alist)
       (if (null? words)
-        (succeed result lines-alist words-alist)
+        (succeed result fail lines-alist words-alist)
         (let ((next-word (car words))
               (rest-of-words (cdr words)))
           (pp 'match-word)
@@ -56,12 +65,15 @@
             (parse-word next-word
                         ; Succeed should take a new (fail) fn, which chooses a new
                         ; word! This is the trick!
-                        (lambda (next-word-value new-lines-alist new-words-alist)
+                        (lambda (next-word-value new-fail-fn new-lines-alist new-words-alist)
                           (let ((new-result (append result (list next-word-value))))
                             (impl new-result
                                   rest-of-words
                                   succeed
-                                  fail
+                                  ; This is the tricky part -- if the next call
+                                  ; to impl fails, it will call the fail
+                                  ; function gotten from this call!
+                                  new-fail-fn
                                   new-lines-alist
                                   new-words-alist)))
                         fail
@@ -78,34 +90,32 @@
     (let* ((name (name-of word-constraint))
            (constraints (contents word-constraint))
            (existing-match (and name (assq name words-alist)))
-           (existing-value (and existing-match (cdr existing match))))
-      (define (new-succeed value new-lines-alist new-words-alist)
+           (existing-value (and existing-match (cdr existing-match))))
+      (define (new-succeed value new-fail-fn)
         (succeed value
+                 new-fail-fn
+                 lines-alist
                  (if name
-                   (cons (cons name value) new-lines-alist)
-                   new-lines-alist)
-                 new-words-alist))
+                     (cons (cons name value) words-alist)
+                     words-alist)))
       (if existing-value
-        (succeed existing-value lines-alist words-alist)
-        (begin
-          (parse-word-constraints constraints
-                                  new-succeed
-                                  ; If the word constraints can't be met, fail?
-                                  ; Or, maybe succeed with a placeholder value?
-                                  (lambda ()
-                                    (pp "Succeeding even though word failed to parse!")
-                                    (pp constraints)
-                                    (succeed #f lines-alist words-alist))
-                                  lines-alist
-                                  words-alist)))))
-  (define (parse-word-constraints constraints succeed fail lines-alist words-alist)
+        (succeed existing-value fail lines-alist words-alist)
+        (parse-word-constraints constraints
+                                new-succeed
+                                ; If the word constraints can't be met, fail?
+                                ; Or, maybe succeed with a placeholder value?
+                                (lambda ()
+                                  (pp "Succeeding even though word failed to parse!")
+                                  (pp constraints)
+                                  (succeed #f fail))))))
+  (define (parse-word-constraints constraints succeed fail)
     (let loop ((possibilities (grader (fetch-words vocabulary constraints))))
       (if (null? possibilities)
         (fail)
         (let ((next-value (car possibilities))
               (remaining-values (cdr possibilities)))
-          ; TODO(peter): here's where to fail!
-          (succeed next-value lines-alist words-alist)))))
+          (succeed next-value
+                   (lambda () (loop remaining-values)))))))
 
   interpreter)
 
@@ -129,7 +139,6 @@
                            (match-line (match-word 'x) (match-word 'a))
                            test-line))
 (define test-poem (test-interpreter test-constraints))
-
 
 
 
