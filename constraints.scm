@@ -44,3 +44,15 @@
     (let ((word (get-word vocabulary base))
           (possibility (get-word vocabulary test)))
       (memq (word-sym possibility) (word-rhymes word)))))
+
+(define (fetch-words vocabulary constraints)
+  (let ((results '())
+        (constraint-fn (join-constraints constraints)))
+    (define (filter-fn k w)
+      (if (constraint-fn vocabulary w)
+        (set! results (cons w results))))
+    (hash-table/for-each vocabulary filter-fn)
+    results))
+(define (join-constraints constraints)
+  (lambda test-args
+    (every (lambda (constraint) (apply constraint test-args)) constraints)))

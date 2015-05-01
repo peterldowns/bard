@@ -1,5 +1,8 @@
-(define (universal-grader possibilities)
-  possibilities)
+(define (universal-grader possibilities) possibilities)
+
+; TODO(peter): redefine graders to return ordered lists of possibilities, not
+; single words. The following graders are broken:
+
 (define (first-pick possibilities)
   (if (null? possibilities)
     #f
