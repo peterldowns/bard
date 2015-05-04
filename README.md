@@ -27,6 +27,11 @@ souffle inoperable
 souvenir cleveland
 ```
 
+If you'd like to hack on or learn more about the code, all of the code is
+(theoretically) nicely formatted and reasonably well-commented. Read the source
+for more details, or email one of the authors -- they'd be happy to hear from
+you!
+
 
 ### Installation
 Once you have Scheme and a copy of this repository, that's it! Simply `(load
