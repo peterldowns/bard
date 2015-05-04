@@ -4,7 +4,7 @@
 (define load-result (load-words "vocabulary/scrape.scm"))
 (define test-vocabulary (car load-result))
 (define test-pos-table (cdr load-result))
-(define test-interpreter (make-interpreter test-vocabulary universal-grader))
+(define test-interpreter (make-interpreter test-vocabulary random-choice))
 (define test-word (match-word 'a (number-syllables 2)
                                  (rhymes-with "clicker")))
 (define test-line (match-line 'b "more-literals"
