@@ -21,9 +21,9 @@
                                 (match-word (any-word)))))
 #|
 (print-poem (interpreter test-haiku))
-; sauciness bayoneted
-; crochet honoraria
-; suffused overtook
+; chapeau rational
+; disobey vicinities
+; declined pajamas
 |#
 
 (define test-poem (poem
@@ -31,8 +31,8 @@
                                 ;'(syllables 10)
                                 (match-word 'y (has-synonym "learning"))
                                 (match-word 'x (rhymes-with "investing")))
-                    (match-line '(syllables 6)
-                                (match-word (any-word)))
+                    (match-line 
+                                (match-word (number-syllables 3)))
                     (match-line '(syllables 10)
                                 (match-word (any-word))
                                 (match-word (any-word)))
