@@ -5,10 +5,27 @@
 (load "matching.scm")
 (load "pp.scm")
 
-(define (syllables-of line)
-  (pp 'checking-syllables)
+(define (line-value-syllables line vocabulary)
+  (define (word-syllables thing)
+    (let ((word (get-word vocabulary thing)))
+      (if (word-record? word)
+        (word-num-syllables word)
+        (begin
+          (pp "Unknown number of syllables for word:")
+          (pp word)
+          0))))
+  (pp 'line)
   (pp line)
-  8)
+  (let ((words (map word-syllables line)))
+    (pp 'word-syllables)
+    (pp words)
+    (reduce + 0 words)))
+
+(define (syllables-of line-constraint)
+  (let* ((metadata (match-metadata line-constraint))
+         (syllables-data (and metadata (assq 'syllables metadata)))
+         (syllables-count (and syllables-data (cadr syllables-data))))
+    syllables-count))
 
 (define (make-interpreter vocabulary grader)
   (define (interpreter poem)
@@ -28,31 +45,42 @@
                               new-words-alist))
                       (lambda ()
                         (pp "Failed to parse a line!")
-                        (error "Broken"))
+                        (error "Unsolveable constraints" next-line))
                       lines-alist
                       words-alist)))))
   (define (parse-line line-constraint succeed fail lines-alist words-alist)
     (let* ((name (name-of line-constraint))
-           (syllables 8)
-           (words (contents line-constraint))
+           (syllables (syllables-of line-constraint))
+           (words (constraints-of line-constraint))
            (existing-match (and name (assq name lines-alist)))
            (existing-value (and existing-match (cdr existing-match))))
+      (pp "Line words")
+      (pp words)
+      (define (line-success line-value new-fail-fn new-lines-alist new-words-alist)
+        (pp "New line value:")
+        (pp line-value)
+        (if (or (not syllables)
+                (= syllables (line-value-syllables line-value vocabulary)))
+            (succeed line-value
+                     (if name
+                       ; Update the line association list if this is a named
+                       ; line.
+                       (cons (cons name line-value) new-lines-alist)
+                       new-lines-alist)
+                     new-words-alist)
+            (begin
+              (pp "Syllable count was not correct:")
+              (display "Required count: ")
+              (display syllables)
+              (newline)
+              (display "Calculated: ")
+              (display (line-value-syllables line-value vocabulary))
+              (newline)
+              (new-fail-fn))))
       (if existing-value
         (succeed existing-value lines-alist words-alist)
-        (parse-words-in-line words
-                             (lambda (value new-fail-fn new-lines-alist new-words-alist)
-                               (if (= syllables (syllables-of value))
-                                 (succeed value
-                                          (if name
-                                            (cons (cons name value) new-lines-alist)
-                                            new-lines-alist)
-                                          new-words-alist)
-                                 (begin
-                                   (pp "Syllables was not 8, failing")
-                                   (new-fail-fn))))
-                             fail
-                             lines-alist
-                             words-alist))))
+        (parse-words-in-line words line-success fail lines-alist words-alist))))
+
   (define (parse-words-in-line words succeed fail lines-alist words-alist)
     (define (impl result words succeed fail lines-alist words-alist)
       (if (null? words)
@@ -107,7 +135,7 @@
                                 (lambda ()
                                   (pp "Succeeding even though word failed to parse!")
                                   (pp constraints)
-                                  (succeed #f fail))))))
+                                  (new-succeed #f fail))))))
   (define (parse-word-constraints constraints succeed fail)
     (let loop ((possibilities (grader (fetch-words vocabulary constraints))))
       (if (null? possibilities)
