@@ -1,34 +1,15 @@
 (define (universal-grader possibilities) possibilities)
 
-; TODO(peter): redefine graders to return ordered lists of possibilities, not
-; single words. The following graders are broken:
-
-(define (first-pick possibilities)
-  (if (null? possibilities)
-    #f
-    (car possibilities)))
-
 (define (random-choice possibilities)
-  (if (null? possibilities)
-    #f
-    (let* ((count (length possibilities))
-           (index (random count))
-           (item (list-ref possibilities index)))
-      item)))
+  (define (shuffle lst)
+    (sort lst
+	  (lambda (x y)
+	    (equal? 0 (random 2)))))
+  (shuffle possibilities))
 
 (define (most-syllables possibilities)
-  (if (null? possibilities)
-    #f
-    (let loop ((longest #f)
-               (possibilities possibilities))
-      (let ((test (car possibilities))
-            (remaining (cdr possibilities)))
-        (if (null? remaining)
-          longest
-          (loop
-            (if (or (not longest)
-                    (> (word-num-syllables test)
-                       (word-num-syllables longest)))
-              test
-              longest)
-            remaining))))))
+  (define (compare-syllables word1 word2)
+   (let ((syllables1 (word-num-syllables word1))
+	 (syllables2 (word-num-syllables word2)))
+     (> syllables1 syllables2)))
+  (quick-sort possibilities compare-syllables))
