@@ -1,6 +1,7 @@
 (load "word.scm")
 
-; Helper for printing poems
+; Helper for printing poems, makes sure to print the actual words as symbols or
+; strings instead of scheme objects.
 (define (print-poem poem)
   (let loop ((poem poem)
              (depth -1))

@@ -28,7 +28,7 @@
                       words-alist)))))
   (define (parse-line line-constraint succeed fail lines-alist words-alist)
     (let* ((name (name-of line-constraint))
-           (syllables (syllables-of line-constraint))
+           (syllables (constraint-syllables line-constraint))
            (words (constraints-of line-constraint))
            (existing-match (and name (assq name lines-alist)))
            (existing-value (and existing-match (cdr existing-match))))
@@ -37,7 +37,7 @@
                             new-lines-alist
                             new-words-alist)
         (if (or (not syllables)
-                (= syllables (line-value-syllables line-value vocabulary)))
+                (= syllables (line-syllables line-value vocabulary)))
             (succeed line-value
                      (if name
                        ; Update the line association list if this is a named
