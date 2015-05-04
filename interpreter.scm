@@ -10,35 +10,42 @@
   ; the given poem (list of line constraints) and solves them one by one.,
   ; while keeping track of state for named lines and words\.
   (define (interpreter poem)
-    (let loop ((result '())
-               (input-lines (match-constraints poem))
-               (lines-alist '())
-               (words-alist '()))
-      (if (null? input-lines)
-        result
-        (let ((next-line (car input-lines))
-              (remaining-lines (cdr input-lines)))
-          ; One by one, each input line of the poem is parsed. Every parsing
-          ; function accepts two continuation functions, one to call if the
-          ; parsing function could come up with a valid result (the success
-          ; continuation), and one to call if it could not (the failure
-          ; continuation). These are simply functions that close over parser
-          ; state, not scheme-level continuations, but the idea is analogous.
-          (define (line-success-fn line-value new-lines-alist new-words-alist)
-            ; On success, continue parsing.
-            (loop (append result (list line-value))
-                  remaining-lines
+    (define (loop result lines succeed fail lines-alist words-alist)
+      (if (null? lines)
+        ; If there are no more lines then succeed with the current result.
+        (succeed result fail lines-alist words-alist)
+        ; Otherwise, grab the next line and parse it.
+        (let ((next-line (car lines))
+              (rest-of-lines (cdr lines)))
+          (define (poem-success-fn next-line-value
+                                   new-fail-fn
+                                   new-lines-alist
+                                   new-words-alist)
+            (loop (append result (list next-line-value))
+                  rest-of-lines
+                  succeed
+                  new-fail-fn
                   new-lines-alist
                   new-words-alist))
-          (define (line-failure-fn)
-            ; On failure, give up.
-            (pp "Failed to parse a line!")
-            (error "Unsolveable constraints" next-line))
-          (parse-line-constraint next-line
-                                 line-success-fn
-                                 line-failure-fn
-                                 lines-alist
-                                 words-alist)))))
+          ; If the next word is a match-word constraint cell, then parse it.
+          ; Otherwise, it should be a literal (string or symbol); parse it and
+          ; then continue looping.
+          (if (match-line? next-line)
+            (parse-line-constraint next-line
+                                   poem-success-fn
+                                   fail
+                                   lines-alist
+                                   words-alist)
+            (error "Unrecognized line constraint" next-line)))))
+    (loop '(); Initially, result is empty
+          (match-constraints poem)
+          (lambda (result fail lines-alist words-alist)
+            result)
+          (lambda ()
+            (pp "Failed to parse poem.")
+            (error "Unsolveable constraints" poem))
+          '()
+          '()))
 
   (define (parse-line-constraint line-constraint
                                  succeed
@@ -64,6 +71,7 @@
         (if (or (not syllables)
                 (= syllables (line-syllables line-value vocabulary)))
           (succeed line-value
+                   new-fail-fn
                    (if name
                      ; Update the line association list if this is a named
                      ; line.
@@ -72,7 +80,7 @@
                    new-words-alist)
           (new-fail-fn)))
       (if existing-value
-        (succeed existing-value lines-alist words-alist)
+        (succeed existing-value fail lines-alist words-alist)
         (parse-words-in-line words
                              line-success-fn
                              fail
