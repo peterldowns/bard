@@ -21,7 +21,7 @@ $ mit-scheme --load demo.scm
 and then interpret an example haiku as follows:
 
 ```scheme
-1 ]=> (print-poem (interpreter test-haiku))
+=> (print-poem (interpreter test-haiku))
 anemones reside
 souffle inoperable
 souvenir cleveland
