@@ -1,0 +1,5 @@
+*.o
+compile
+makedb
+merge
+rhyme
