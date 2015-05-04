@@ -2,7 +2,6 @@
 (load "constraints.scm")
 (load "grader.scm")
 (load "matching.scm")
-(load "pp.scm")
 (load "util.scm")
 
 (define (make-interpreter vocabulary grader)
