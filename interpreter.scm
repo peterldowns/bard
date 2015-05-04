@@ -26,9 +26,8 @@
                   new-fail-fn
                   new-lines-alist
                   new-words-alist))
-          ; If the next word is a match-word constraint cell, then parse it.
-          ; Otherwise, it should be a literal (string or symbol); parse it and
-          ; then continue looping.
+          ; If the next line is a match-line constraint cell, then parse it.
+          ; If not, this is a broken poem definition.
           (if (match-line? next-line)
             (parse-line-constraint next-line
                                    poem-success-fn
@@ -36,15 +35,16 @@
                                    lines-alist
                                    words-alist)
             (error "Unrecognized line constraint" next-line)))))
-    (loop '(); Initially, result is empty
+    ; Start the recursive parsing procedure.
+    (loop '(); initial result is empty
           (match-constraints poem)
           (lambda (result fail lines-alist words-alist)
             result)
           (lambda ()
             (pp "Failed to parse poem.")
             (error "Unsolveable constraints" poem))
-          '()
-          '()))
+          '(); initial lines-alist is empty
+          '())); initial words-alist is empty
 
   (define (parse-line-constraint line-constraint
                                  succeed
@@ -154,15 +154,14 @@
   (define (parse-word-constraints constraints succeed fail)
     (let loop ((possibilities (grader (fetch-words vocabulary constraints))))
       (if (null? possibilities)
+        ; Fail if there no more possibilities match this constraint.
         (fail)
+        ; Otherwise, succeed with the next possibility, and a function
+        ; to be called if that possibility doesn't work (a fail function)
+        ; that will re-try with the next possibility.
         (let ((next-value (car possibilities))
               (remaining-values (cdr possibilities)))
           (succeed next-value
                    (lambda () (loop remaining-values)))))))
 
   interpreter)
-
-; Future improvements:
-; * wordnet (meanings)
-; * not-rhyming (pattern 'a can't rhyme with 'b)
-; * Pass constraints between lines, not just between words in a line.

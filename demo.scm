@@ -19,12 +19,6 @@
                                 '(syllables 5)
                                 (match-word (any-word))
                                 (match-word (any-word)))))
-#|
-(print-poem (interpreter test-haiku))
-; chapeau rational
-; disobey vicinities
-; declined pajamas
-|#
 
 (define test-poem (poem
                     (match-line 'a
@@ -39,11 +33,30 @@
                     (match-line 'a)
                     (match-line (match-word 'x)
                                 (match-word 'a))))
+
 #|
+(print-poem (interpreter test-haiku))
+; chapeau rational
+; disobey vicinities
+; declined pajamas
 (print-poem (interpreter test-poem))
 ; unlearning vesting
 ; mariposas
 ; dirigibles mariposas
 ; unlearning vesting
 ; vesting enunciates
+
+; Because of the random-choice grader, interpreting the same poem a second time
+; will likely result in different output as long as there are multiple
+; solutions.
+(print-poem (interpreter test-haiku))
+; anemones reside
+; souffle inoperable
+; souvenir cleveland
+(print-poem (interpreter test-poem))
+; unlearning resting
+; culturally
+; harmonics kyrie
+; unlearning resting
+; resting slues
 |#
