@@ -50,5 +50,3 @@
          (syllables-data (and metadata (assq 'syllables metadata)))
          (syllables-count (and syllables-data (cadr syllables-data))))
     syllables-count))
-
-

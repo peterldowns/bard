@@ -1,4 +1,6 @@
-; Functions for expressing the poem as a nested list of constraints.
+; Functions for expressing the poem as a nested list of constraints. These
+; tagged lists have three optional componenents: names, metadata, and
+; constraints.
 (define (tagged-list tag)
   (lambda elements (cons tag elements)))
 (define (tagged-list? tag)
@@ -14,34 +16,39 @@
 (define match-word (tagged-list 'word))
 (define match-word? (tagged-list? 'word))
 
-(define (contents match-cell)
-  (cond ((poem? match-cell)
-         (cdr match-cell))
-        ((or (match-line? match-cell) (match-word? match-cell))
-         (if (name-of match-cell)
-           (cddr match-cell)
-           (cdr match-cell)))
-        (else (error "Unrecognized type of match-cell:" match-cell))))
-
+; Metadata are expressed as tuples. The results of this function will be
+; an alist (or an empty list if there is no metadata).
 (define (match-metadata match-cell)
   (if (pair? match-cell)
-    (filter pair? match-cell)))
+    (filter (lambda (x)
+              (and (pair? x)
+                   (= 2 (length x))))
+            match-cell)
+    (error "Unrecognized type of match-cell" match-cell)))
 
-(define (name-of match-cell)
-  (if (and (pair? match-cell)
-           (> (length match-cell) 1))
-    (let ((name (cadr match-cell)))
-      ; Not all match-cells have names
-      (if (symbol? name)
-        name
-        (let ((data-cell (assq 'name (match-metadata match-cell))))
-          (if data-cell
-            (cadr data-cell)
-            #f))))
+; Names are expressed in metadata as a ('name <value>) cell, or by a symbol
+; present as the second item in the tagged list (first after the name.) For
+; example, both of the following cells have the same name:
+;   (match-word 'a ...)
+;   (match-word ... '(name a) ...)
+; If the name does not exist, the function returns #f.
+(define (match-name match-cell)
+  (if (pair? match-cell)
+    (if (> (length match-cell) 1)
+      (let ((name (cadr match-cell)))
+        (if (symbol? name)
+          name
+          (let ((data-cell (assq 'name (match-metadata match-cell))))
+            (if data-cell
+              (cadr data-cell)
+              #f))))
+      #f)
+    (error "Unrecognized type of match-cell" match-cell)))
 
-    #f))
-
-(define (constraints-of match-cell)
+; Constraints are expressed as functions (that may match multiple objects),
+; tagged lists, or literals, depending on the type of match-cell in which the
+; constraints are present.
+(define (match-constraints match-cell)
   (if (poem? match-cell)
     (cdr match-cell)
     (filter

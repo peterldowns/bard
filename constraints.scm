@@ -1,13 +1,14 @@
 (load "word.scm")
 (load "util.scm")
 
-
 ; Constraint functions return functions of the following type:
-; (lambda (vocabulary word-record)
+; (lambda (vocabulary word-thing)
 ;   ...
 ;   #t or #f),
-; which return #t if the given word-record is considered to match the
-; constraint or #f if it does not.
+; which return #t if the given word is considered to match the constraint or #f
+; if it does not. The word-thing must be converted to a word-record by being
+; looked up in a vocabulary, because poem constraints allow literals and
+; symbols as well as generic words constraints
 
 (define (number-syllables n)
   (lambda (vocabulary thing)
