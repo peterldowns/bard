@@ -14,12 +14,7 @@
           (pp "Unknown number of syllables for word:")
           (pp word)
           0))))
-  (pp 'line)
-  (pp line)
-  (let ((words (map word-syllables line)))
-    (pp 'word-syllables)
-    (pp words)
-    (reduce + 0 words)))
+  (reduce + 0 (map word-syllables line)))
 
 (define (syllables-of line-constraint)
   (let* ((metadata (match-metadata line-constraint))
@@ -54,11 +49,7 @@
            (words (constraints-of line-constraint))
            (existing-match (and name (assq name lines-alist)))
            (existing-value (and existing-match (cdr existing-match))))
-      (pp "Line words")
-      (pp words)
       (define (line-success line-value new-fail-fn new-lines-alist new-words-alist)
-        (pp "New line value:")
-        (pp line-value)
         (if (or (not syllables)
                 (= syllables (line-value-syllables line-value vocabulary)))
             (succeed line-value
@@ -68,15 +59,7 @@
                        (cons (cons name line-value) new-lines-alist)
                        new-lines-alist)
                      new-words-alist)
-            (begin
-              (pp "Syllable count was not correct:")
-              (display "Required count: ")
-              (display syllables)
-              (newline)
-              (display "Calculated: ")
-              (display (line-value-syllables line-value vocabulary))
-              (newline)
-              (new-fail-fn))))
+            (new-fail-fn)))
       (if existing-value
         (succeed existing-value lines-alist words-alist)
         (parse-words-in-line words line-success fail lines-alist words-alist))))
@@ -87,8 +70,6 @@
         (succeed result fail lines-alist words-alist)
         (let ((next-word (car words))
               (rest-of-words (cdr words)))
-          (pp 'match-word)
-          (pp next-word)
           (if (match-word? next-word)
             (parse-word next-word
                         ; Succeed should take a new (fail) fn, which chooses a new
@@ -130,12 +111,10 @@
         (succeed existing-value fail lines-alist words-alist)
         (parse-word-constraints constraints
                                 new-succeed
-                                ; If the word constraints can't be met, fail?
-                                ; Or, maybe succeed with a placeholder value?
                                 (lambda ()
-                                  (pp "Succeeding even though word failed to parse!")
+                                  (pp "Failing, word failed to parse!")
                                   (pp constraints)
-                                  (new-succeed #f fail))))))
+                                  (fail))))))
   (define (parse-word-constraints constraints succeed fail)
     (let loop ((possibilities (grader (fetch-words vocabulary constraints))))
       (if (null? possibilities)
@@ -158,7 +137,7 @@
                                  test-word
                                  (match-word (rhymes-with "corruption"))))
 (define test-constraints (poem
-                           (match-line '(name a)
+                           (match-line 'a
                                        '(syllables 7)
                                        (match-word 'a (has-antonym "hungry"))
                                        "literal"
@@ -166,43 +145,13 @@
                            (match-line test-word)
                            (match-line '(syllables 6) (match-word (any-word)))
                            (match-line '(syllables 8) (match-word (any-word))
+                                                      (match-word (any-word))
                                                       (match-word (any-word)))
                            (match-line 'a)
                            (match-line (match-word 'x) (match-word 'a))
                            test-line))
 (define test-poem (test-interpreter test-constraints))
-
-
-
-#|
-(define (choose-word state test-fn succeed exit)
-  (define (loop state)
-    (if (null? state)
-      (exit)
-      (let ((word (car state))
-            (new-state (cdr state)))
-        (test-fn word
-                 succeed
-                 (lambda ()
-                   (loop new-state))))))
-  (loop state))
-
-(define (test-choice choice succeed fail)
-  (pp "testing choice")
-  (pp choice)
-  (if (> choice 4)
-    (begin
-      (pp "-- Succeeded, calling succeed")
-      (succeed choice))
-    (begin
-      (pp "-- Failed, calling fail!")
-      (fail))))
-
-(define (exit-fn)
-  (pp 'failed)
-  'failed)
-
-(define (succeed-fn thing)
-  (pp 'succeed!)
-  (cons 'succeed thing))
-|#
+; TODO(peter): grader format
+; TODO(peter): improvements:
+;   * wordnet (meanings)
+;   * not-rhyming (pattern 'a can't rhyme with 'b)
