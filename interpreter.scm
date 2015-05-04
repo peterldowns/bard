@@ -32,7 +32,10 @@
            (words (constraints-of line-constraint))
            (existing-match (and name (assq name lines-alist)))
            (existing-value (and existing-match (cdr existing-match))))
-      (define (line-success line-value new-fail-fn new-lines-alist new-words-alist)
+      (define (line-success line-value
+                            new-fail-fn
+                            new-lines-alist
+                            new-words-alist)
         (if (or (not syllables)
                 (= syllables (line-value-syllables line-value vocabulary)))
             (succeed line-value
@@ -53,30 +56,34 @@
         (succeed result fail lines-alist words-alist)
         (let ((next-word (car words))
               (rest-of-words (cdr words)))
-          (if (match-word? next-word)
-            (parse-word next-word
-                        ; Succeed should take a new (fail) fn, which chooses a new
-                        ; word! This is the trick!
-                        (lambda (next-word-value new-fail-fn new-lines-alist new-words-alist)
-                          (let ((new-result (append result (list next-word-value))))
-                            (impl new-result
-                                  rest-of-words
-                                  succeed
-                                  ; This is the tricky part -- if the next call
-                                  ; to impl fails, it will call the fail
-                                  ; function gotten from this call!
+          (define (new-success-fn next-word-value
                                   new-fail-fn
                                   new-lines-alist
-                                  new-words-alist)))
-                        fail
-                        lines-alist
-                        words-alist)
+                                  new-words-alist)
+            (let ((new-result (append result (list next-word-value))))
+              (impl new-result
+                    rest-of-words
+                    succeed
+                    ; This is the tricky part -- if the next call
+                    ; to impl fails, it will call the fail
+                    ; function gotten from this call!
+                    new-fail-fn
+                    new-lines-alist
+                    new-words-alist)))
+          (if (match-word? next-word)
+            (parse-word next-word new-success-fn fail lines-alist words-alist)
             (let ((new-result
-                    (append result (list (cond
-                                           ((string? next-word) (symbol next-word))
-                                           ((symbol? next-word) next-word)
-                                           (else (cons 'unrecognized next-word)))))))
-              (impl new-result rest-of-words succeed fail lines-alist words-alist))))))
+                    (append result
+                            (list (cond
+                                    ((string? next-word) (symbol next-word))
+                                    ((symbol? next-word) next-word)
+                                    (else (cons 'unrecognized next-word)))))))
+              (impl new-result
+                    rest-of-words
+                    succeed
+                    fail
+                    lines-alist
+                    words-alist))))))
     (impl '() words succeed fail lines-alist words-alist))
   (define (parse-word word-constraint succeed fail lines-alist words-alist)
     (let* ((name (name-of word-constraint))
