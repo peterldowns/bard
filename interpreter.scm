@@ -158,11 +158,15 @@
                                  test-word
                                  (match-word (rhymes-with "corruption"))))
 (define test-constraints (poem
-                           (match-line 'a
+                           (match-line '(name a)
+                                       '(syllables 7)
                                        (match-word 'a (has-antonym "hungry"))
                                        "literal"
                                        (match-word 'x (has-synonym "indolent")))
                            (match-line test-word)
+                           (match-line '(syllables 6) (match-word (any-word)))
+                           (match-line '(syllables 8) (match-word (any-word))
+                                                      (match-word (any-word)))
                            (match-line 'a)
                            (match-line (match-word 'x) (match-word 'a))
                            test-line))
