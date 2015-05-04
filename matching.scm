@@ -23,6 +23,10 @@
            (cdr match-cell)))
         (else (error "Unrecognized type of match-cell:" match-cell))))
 
+(define (match-metadata match-cell)
+  (if (pair? match-cell)
+    (filter pair? match-cell)))
+
 (define (name-of match-cell)
   (if (and (pair? match-cell)
            (> (length match-cell) 1))
@@ -30,12 +34,20 @@
       ; Not all match-cells have names
       (if (symbol? name)
         name
-        #f))
+        (let ((data-cell (assq 'name (match-metadata match-cell))))
+          (if data-cell
+            (cadr data-cell)
+            #f))))
+
     #f))
 
 (define (constraints-of match-cell)
-  (if (pair? match-cell)
-    (if (name-of match-cell)
-      (cddr match-cell)
-      (cdr match-cell))
-    (error "Not a match-cell:" match-cell)))
+  (if (poem? match-cell)
+    (cdr match-cell)
+    (filter
+      (cond ((match-line? match-cell)
+             (lambda (t) (or (string? t) (match-word? t))))
+            ((match-word? match-cell)
+             procedure?)
+            (else (error "Unrecognized type of match-cell" match-cell)))
+      match-cell)))
