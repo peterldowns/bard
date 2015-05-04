@@ -9,6 +9,8 @@
 ; TODO(peter): pass in line and word lookup tables? Strings -> literal words,
 ; symbols -> lookup in table.
 ; TODO(peter): line constraints?
+
+
 (define (get-word vocabulary thing)
   (cond ((word-record? thing) thing)
         (else
@@ -24,6 +26,10 @@
     (let ((word (get-word vocabulary thing)))
       (= n (word-num-syllables word)))))
 
+(define (any-word)
+  (lambda (vocabulary test-thing)
+    (let ((test (get-word vocabulary test-thing)))
+      (not (eq? test word-dne)))))
 
 (define (has-synonym base-thing)
   (lambda (vocabulary test-thing)
