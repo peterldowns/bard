@@ -7,3 +7,5 @@ scrape.json: rhymes.json words.txt
 rhymes.json: words.txt
 	./dump_rhymes.py
 
+clean:
+	rm scrame.scm scrape.json rhymes.json
